@@ -40,18 +40,19 @@ router.get("/:id", (req, res) => {
     );
 });
 
-router.post("/", (req, res) => {
+router.post("/", validatePost, (req, res) => {
+  const realCoolMessage = process.env.AwesomeStuff || "Suh dude!";
   const changes = req.body;
   db("accounts")
     .insert(changes)
-    .then(data => res.status(200).json(data))
+    .then(data => res.status(200).json({ message: realCoolMessage, data }))
     .catch(err =>
       res
         .status(500)
-        .json(
-          { message: "There was an error trying to upload this account" },
+        .json({
+          message: "There was an error trying to upload this account",
           err
-        )
+        })
     );
 });
 
@@ -98,4 +99,21 @@ router.delete("/:id", (req, res) => {
         )
     );
 });
+
+function validatePost(req, res, next) {
+  // do your magic!
+  const body = req.body;
+  if (typeof body.budget !== "number") {
+    res
+      .status(404)
+      .json({ message: "please add a valid number to budget field" });
+  }
+  if (!body.name) {
+    res.status(404).json({ message: "missing required name field" });
+  } else if (!body.budget) {
+    res.status(404).json({ message: "missing required budget field" });
+  } else {
+    next();
+  }
+}
 module.exports = router;
